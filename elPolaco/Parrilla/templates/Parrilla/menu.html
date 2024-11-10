@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <style>.producto-imagen {
+        width: 150px; /* Ancho fijo */
+        height: 150px; /* Alto fijo */
+        object-fit: cover; /* Mantiene las proporciones de la imagen, recortando si es necesario */
+        border-radius: 15px;
+    }
+    
+    .card {
+        min-height: 150px; /* Establece una altura mínima para todas las cards */
+    }
+    body {
+        background-color: linear-gradient(45deg, #c0392b, #e74c3c, #d35400);
+    }
+    .navbar {
+        background: linear-gradient(45deg, #c0392b, #e74c3c, #d35400);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Da un efecto brillante */
+      }
+      .card {
+       background-color: transparent;
+       border: none;
+       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Da un efecto brillante */
+      }
+    </style>
+    <title>Parrilla El Polaco</title>
+</head>
+<body class="bg-gray" >
+
+    <nav class="navbar bg-body-tertiary navbar-expand-lg navbar-light">
+        <div class="container">
+          <a class="navbar-brand" href="#">
+            <img src="productos/logo.png" alt="logo" width="250" height="100">
+          </a>
+        </div>
+      </nav>
+
+     
+      <div class="container mt-4">
+        <h1 class="mb-4">Menú de Productos</h1>
+         <!-- Formulario para filtrar productos por categoría -->
+    <form method="GET" action="" class="mb-4">
+        <label for="categoria-select">Filtrar por categoría:</label>
+        <select id="categoria-select" name="categoria" onchange="this.form.submit()" class="form-select">
+            <option value="">Todas las categorías</option>
+            {% for key, value in categorias %}
+                <option value="{{ key }}" {% if key == categoria_seleccionada %}selected{% endif %}>
+                    {{ value }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+        <div class="row">
+            {% for producto in productos %}
+                <div class="col-md-6 mb-4">
+                    <div class="card d-flex flex-row border-radius-1">
+                        <!-- Imagen del producto con tamaño fijo a la izquierda -->
+                        <img src="{{ producto.imagen.url }}" class="producto-imagen card-img-left" alt="{{ producto.nombre }}">
+                        
+                        <div class="card-body">
+                            <h5 class="card-title">{{ producto.nombre }}</h5>
+                            <p class="card-text">{{ producto.descripcion }}</p>
+                            <p class="text-end text-success">${{ producto.precio }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if forloop.counter|divisibleby:2 %}
+                    </div><div class="row">
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+
