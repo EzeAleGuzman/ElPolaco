@@ -1,18 +1,20 @@
-from django.contrib import admin
-from .models import Producto, Mesa, Pedido
+# from django.contrib import admin
+# from .models import Producto, Pedido, Mesa, PedidoProducto
 
-class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'precio', 'categoria')  # Campos que se mostrarán en la lista de productos
-    search_fields = ('nombre',)  # Permitir la búsqueda por nombre
+# class PedidoProductoInline(admin.TabularInline):
+#     model = PedidoProducto
+#     extra = 1  # Puedes agregar más productos por defecto
 
-class MesaAdmin(admin.ModelAdmin):
-    list_display = ('numero', 'estado')
+# class PedidoAdmin(admin.ModelAdmin):
+#     inlines = [PedidoProductoInline]
+#     list_display = ('mesa', 'fecha', 'total', 'pagado')
+#     list_filter = ('pagado',)
 
-class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('mesa', 'fecha_pedido', 'total', 'pagado')
-    list_filter = ('pagado',)  # Filtro por estado de pago
+# class ProductoAdmin(admin.ModelAdmin):
+#     list_display = ('nombre', 'precio', 'categoria')
+#     search_fields = ('nombre',)
 
-# Registra los modelos para que aparezcan en el admin
-admin.site.register(Producto)
-admin.site.register(Mesa)
-admin.site.register(Pedido)
+# admin.site.register(Producto, ProductoAdmin)
+# admin.site.register(Mesa)
+# admin.site.register(Pedido, PedidoAdmin)
+# admin.site.register(PedidoProducto)

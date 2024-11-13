@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Producto
+from django.utils import timezone
+from .models import Producto, Pedido, Mesa
 
 
 # def ver_menu(request):
@@ -21,3 +22,31 @@ def ver_menu(request):
         'categorias': categorias,
         'categoria_seleccionada': categoria  # Para que el select recuerde la categoría seleccionada
     })
+
+def crear_pedido(request, mesa_id):
+    mesa = get_object_or_404(Mesa, id=mesa_id)
+    
+    # Crear un nuevo pedido solo si no hay uno pendiente
+    pedido, created = Pedido.objects.get_or_create(mesa=mesa, pagado=False, defaults={'fecha': timezone.now()})
+    
+    if not created:
+        return redirect('detalle_pedido', pedido_id=pedido.id)
+    
+    return redirect('lista_productos', pedido_id=pedido.id)
+
+
+def lista_mesas(request):
+    mesas = Mesa.objects.all()
+    return render(request, 'mesas.html', {'mesas': mesas})
+
+def marcar_como_reservada(request, mesa_id):
+    mesa = get_object_or_404(Mesa, id=mesa_id)
+    mesa.estado = 'reservada'
+    mesa.save()
+    return redirect('lista_mesas')
+
+def liberar_mesa(request, mesa_id):
+    mesa = get_object_or_404(Mesa, id=mesa_id)
+    mesa.estado = 'libre'
+    mesa.save()
+    return redirect('lista_mesas')
