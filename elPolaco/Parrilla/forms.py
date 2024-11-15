@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Pedido, Mesa
+from .models import Pedido, DetallePedido, Producto
 
 class PedidoForm(forms.ModelForm):
     class Meta:
@@ -14,5 +14,11 @@ class PedidoForm(forms.ModelForm):
             'para_llevar': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
-    # Filtrar las mesas disponibles (solo las que están libres)
-    mesa = forms.ModelChoiceField(queryset=Mesa.objects.filter(estado='libre'), empty_label="Seleccionar mesa")
+class DetallePedidoForm(forms.ModelForm):
+    class Meta:
+        model = DetallePedido
+        fields = ['producto', 'cantidad']
+
+    producto = forms.ModelChoiceField(queryset=Producto.objects.all(), empty_label="Seleccionar Producto", widget=forms.Select(attrs={'class': 'form-control'}))
+    cantidad = forms.IntegerField(min_value=1, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+

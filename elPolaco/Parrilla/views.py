@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import Producto, Pedido, Mesa
-from .forms import PedidoForm
+from .forms import PedidoForm, DetallePedidoForm
 
 
 def ver_menu(request):
@@ -32,15 +32,40 @@ class PedidoCreateView(CreateView):
         # Aquí podemos agregar lógica adicional si es necesario
         return super().form_valid(form)
 
-# Vista para editar un pedido
-class PedidoUpdateView(UpdateView):
-    model = Pedido
-    form_class = PedidoForm
-    template_name = 'Parrilla/editar_pedido.html'
+def editar_pedido(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
     
-    def form_valid(self, form):
-        # Aquí podemos agregar lógica adicional si es necesario
-        return super().form_valid(form)
+    # Formulario para editar el pedido
+    if request.method == 'POST' and 'editar_pedido' in request.POST:
+        pedido_form = PedidoForm(request.POST, instance=pedido)
+        if pedido_form.is_valid():
+            pedido_form.save()
+            pedido.calcular_total()  # Calcular el total después de editar
+            return redirect('detalle_pedido', pedido_id=pedido.id)
+    else:
+        pedido_form = PedidoForm(instance=pedido)
+
+    # Formulario para agregar detalles al pedido
+    if request.method == 'POST' and 'agregar_detalle' in request.POST:
+        detalle_form = DetallePedidoForm(request.POST)
+        if detalle_form.is_valid():
+            detalle = detalle_form.save(commit=False)
+            detalle.pedido = pedido  # Asociar el detalle con el pedido
+            detalle.calcular_subtotal()  # Calcular el subtotal del detalle
+            detalle.save()
+            pedido.calcular_total()  # Recalcular el total después de agregar el detalle
+            return redirect('editar_pedido', pk=pedido.id)
+    else:
+        detalle_form = DetallePedidoForm()
+
+    detalles_pedido = pedido.detallepedido_set.all()  # Obtener los detalles del pedido
+
+    return render(request, 'Parrilla/editar_pedido.html', {
+        'pedido_form': pedido_form,
+        'detalle_form': detalle_form,
+        'detalles_pedido': detalles_pedido,
+        'pedido': pedido,
+    })
 
 # Vista para eliminar un pedido
 class PedidoDeleteView(DeleteView):

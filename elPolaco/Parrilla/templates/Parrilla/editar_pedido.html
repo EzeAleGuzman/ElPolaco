@@ -1,10 +1,41 @@
 {% extends 'Parrilla/base_generic.html' %}
 
 {% block content %}
-    <h2>Editar Pedido #{{ form.instance.id }}</h2>
+    <h2>Editar Pedido #{{ pedido.id }}</h2>
+
+    <h3>Detalles del Pedido</h3>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Actualizar Pedido</button>
+        {{ pedido_form.as_p }}
+        <button type="submit" name="editar_pedido" class="btn btn-primary">Guardar Pedido</button>
     </form>
+
+    <h3>Agregar Detalle al Pedido</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ detalle_form.as_p }}
+        <button type="submit" name="agregar_detalle" class="btn btn-success">Agregar Detalle</button>
+    </form>
+
+    <h3>Detalles Agregados</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles_pedido %}
+                <tr>
+                    <td>{{ detalle.producto.nombre }}</td>
+                    <td>{{ detalle.cantidad }}</td>
+                    <td>${{ detalle.subtotal }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h4>Total: ${{ pedido.total }}</h4>
 {% endblock %}
