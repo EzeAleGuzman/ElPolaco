@@ -1,0 +1,10 @@
+{% extends 'Parrilla/base_generic.html' %}
+
+{% block content %}
+    <h2>Crear Pedido</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Crear Pedido</button>
+    </form>
+{% endblock %}

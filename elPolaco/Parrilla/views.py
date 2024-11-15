@@ -1,11 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, UpdateView, DeleteView
 from .models import Producto, Pedido, Mesa
+from .forms import PedidoForm
 
-
-# def ver_menu(request):
-#     productos = Producto.objects.all()
-#     return render(request, 'Parrilla/menu.html', {'productos': productos})
 
 def ver_menu(request):
     categoria = request.GET.get('categoria')  # Obtener la categoría seleccionada desde la URL
@@ -23,30 +22,38 @@ def ver_menu(request):
         'categoria_seleccionada': categoria  # Para que el select recuerde la categoría seleccionada
     })
 
-def crear_pedido(request, mesa_id):
-    mesa = get_object_or_404(Mesa, id=mesa_id)
+# Vista para crear un nuevo pedido
+class PedidoCreateView(CreateView):
+    model = Pedido
+    form_class = PedidoForm
+    template_name = 'Parrilla/crear_pedido.html'
     
-    # Crear un nuevo pedido solo si no hay uno pendiente
-    pedido, created = Pedido.objects.get_or_create(mesa=mesa, pagado=False, defaults={'fecha': timezone.now()})
-    
-    if not created:
-        return redirect('detalle_pedido', pedido_id=pedido.id)
-    
-    return redirect('lista_productos', pedido_id=pedido.id)
+    def form_valid(self, form):
+        # Aquí podemos agregar lógica adicional si es necesario
+        return super().form_valid(form)
 
+# Vista para editar un pedido
+class PedidoUpdateView(UpdateView):
+    model = Pedido
+    form_class = PedidoForm
+    template_name = 'Parrilla/editar_pedido.html'
+    
+    def form_valid(self, form):
+        # Aquí podemos agregar lógica adicional si es necesario
+        return super().form_valid(form)
 
-def lista_mesas(request):
+# Vista para eliminar un pedido
+class PedidoDeleteView(DeleteView):
+    model = Pedido
+    template_name = 'eliminar_pedido.html'
+    success_url = reverse_lazy('listar_pedidos')
+
+def vista_mesas(request):
+    # Obtener todas las mesas
     mesas = Mesa.objects.all()
-    return render(request, 'mesas.html', {'mesas': mesas})
-
-def marcar_como_reservada(request, mesa_id):
-    mesa = get_object_or_404(Mesa, id=mesa_id)
-    mesa.estado = 'reservada'
-    mesa.save()
-    return redirect('lista_mesas')
-
-def liberar_mesa(request, mesa_id):
-    mesa = get_object_or_404(Mesa, id=mesa_id)
-    mesa.estado = 'libre'
-    mesa.save()
-    return redirect('lista_mesas')
+    return render(request, 'Parrilla/mesas.html', {'mesas': mesas})
+    
+def detalle_pedido(request, pedido_id):
+    # Obtener el pedido por su ID
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    return render(request, 'Parrilla/detalle_pedido.html', {'pedido': pedido})

@@ -1,5 +1,5 @@
-# from django.contrib import admin
-# from .models import Producto, Pedido, Mesa, PedidoProducto
+from django.contrib import admin
+from .models import Producto, Pedido, Mesa, DetallePedido
 
 # class PedidoProductoInline(admin.TabularInline):
 #     model = PedidoProducto
@@ -14,7 +14,7 @@
 #     list_display = ('nombre', 'precio', 'categoria')
 #     search_fields = ('nombre',)
 
-# admin.site.register(Producto, ProductoAdmin)
-# admin.site.register(Mesa)
-# admin.site.register(Pedido, PedidoAdmin)
-# admin.site.register(PedidoProducto)
+admin.site.register(Producto)
+admin.site.register(Mesa)
+admin.site.register(Pedido)
+admin.site.register(DetallePedido)

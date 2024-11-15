@@ -4,8 +4,9 @@ from . import views
 
 urlpatterns = [
     path('', views.ver_menu, name='ver_menu'),
-    path('mesas/', views.lista_mesas, name='lista_mesas'),
-    path('mesa/reservar/<int:mesa_id>/', views.marcar_como_reservada, name='marcar_como_reservada'),
-    path('mesa/liberar/<int:mesa_id>/', views.liberar_mesa, name='liberar_mesa'),
-    path('pedido/nuevo/<int:mesa_id>/', views.crear_pedido, name='crear_pedido'),
+    path('mesas/', views.vista_mesas, name='vista_mesas'),
+    path('pedido/<int:pedido_id>/', views.detalle_pedido, name='detalle_pedido'),
+    path('crear/', views.PedidoCreateView.as_view(), name='crear_pedido'),
+    path('editar/<int:pk>/', views.PedidoUpdateView.as_view(), name='editar_pedido'),
+    path('eliminar/<int:pk>/', views.PedidoDeleteView.as_view(), name='eliminar_pedido'),
 ]
