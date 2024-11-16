@@ -31,6 +31,10 @@ class PedidoCreateView(CreateView):
     def form_valid(self, form):
         # Aquí podemos agregar lógica adicional si es necesario
         return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        # Si el formulario es inválido, redirigimos a la vista de mesas (puedes ajustar la URL según sea necesario)
+        return redirect('vista_mesas')  # Asumiendo que 'lista_mesas' es el nombre de la URL que muestra las mesas
 
 def editar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)
@@ -41,7 +45,7 @@ def editar_pedido(request, pk):
         if pedido_form.is_valid():
             pedido_form.save()
             pedido.calcular_total()  # Calcular el total después de editar
-            return redirect('detalle_pedido', pedido_id=pedido.id)
+            return redirect('vista_mesas')
     else:
         pedido_form = PedidoForm(instance=pedido)
 
@@ -68,10 +72,10 @@ def editar_pedido(request, pk):
     })
 
 # Vista para eliminar un pedido
-class PedidoDeleteView(DeleteView):
-    model = Pedido
-    template_name = 'eliminar_pedido.html'
-    success_url = reverse_lazy('listar_pedidos')
+def eliminar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    pedido.delete()  # Elimina el pedido de la base de datos
+    return redirect('lista_pedidos')  # Redirige a la vista de lista de pedidos o la que desees
 
 def vista_mesas(request):
     # Obtener todas las mesas
