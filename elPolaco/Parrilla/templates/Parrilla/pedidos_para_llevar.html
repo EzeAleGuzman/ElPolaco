@@ -1,0 +1,61 @@
+{% extends 'Parrilla/base_generic.html' %} {% block content %}
+<div class="container p-5">
+  <h2 class="text-center mb-4 mt-5">Pedidos Para Llevar</h2>
+
+  <!-- Formulario para agregar un nuevo pedido para llevar -->
+  <form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="nombre_cliente">Nombre del Cliente</label>
+      <input
+        type="text"
+        class="form-control"
+        id="nombre_cliente"
+        name="nombre_cliente"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-success mt-2">
+      Agregar Pedido Para Llevar
+    </button>
+  </form>
+
+  <h3 class="mt-5">Pedidos Actuales Para Llevar</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID Pedido</th>
+        <th>Nombre Cliente</th>
+        <th>Fecha</th>
+        <th>Total</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in pedidos_para_llevar %}
+      <tr>
+        <td>{{ pedido.id }}</td>
+        <td>{{ pedido.nombre }}</td>
+        <td>{{ pedido.fecha }}</td>
+        <td>${{ pedido.total }}</td>
+        <td>
+          <a
+            href="{% url 'editar_pedido' pk=pedido.id %}"
+            class="btn btn-warning"
+          >
+            Editar Pedido
+          </a>
+          <a
+            href="{% url 'cobrar_pedido' pk=pedido.id %}"
+            class="btn btn-info"
+            onclick="return confirm('¿Seguro que deseas cobrar este pedido?');"
+          >
+            Cobrar
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

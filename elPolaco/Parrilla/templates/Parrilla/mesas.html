@@ -1,48 +1,96 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Estado de las Mesas</title>
-    <!-- Incluye Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <style>
-        .mesa {
-            margin: 20px;
-            padding: 20px;
-            text-align: center;
-            color: white;
-        }
-        .libre { background-color: #28a745; } /* Verde para libre */
-        .ocupada { background-color: #dc3545; } /* Rojo para ocupada */
-        .reservada { background-color: #ffc107; } /* Amarillo para reservada */
+      .mesa {
+        margin: 20px;
+        padding: 20px;
+        text-align: center;
+        color: white;
+      }
+      .libre {
+        background-color: #28a745;
+      } /* Verde para libre */
+      .ocupada {
+        background-color: #dc3545;
+      } /* Rojo para ocupada */
+      .reservada {
+        background-color: #ffc107;
+      } /* Amarillo para reservada */
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Estado de las Mesas</h1>
-        <div class="row">
-            {% for mesa in mesas %}
-    <div class="col-md-4">
-        <div class="mesa {{ mesa.estado }} rounded mb-3">
+      <h1 class="mb-4">Estado de las Mesas</h1>
+      <div class="row">
+        {% for mesa in mesas %}
+        <div class="col-md-3">
+          <div class="mesa {{ mesa.estado }} rounded mb-3">
             <h5 class="card-title">Mesa {{ mesa.numero }}</h5>
-            <p class="card-text">Estado: <strong>{{ mesa.get_estado_display }}</strong></p>
+
             {% if mesa.estado == 'ocupada' %}
-                <p>Cliente: {{ mesa.pedido_set.last.nombre }}</p>
-                <a href="{% url 'editar_pedido' mesa.pedido_set.last.id %}" class="btn btn-light">Editar Pedido</a>
+            <p>Cliente: {{ mesa.pedido_set.last.nombre }}</p>
+            <p>Total: {{ mesa.pedido_set.last.total }}</p>
+
+            <div class="d-flex">
+              <!-- Formulario para pagar y liberar -->
+              <form
+                method="POST"
+                action="{% url 'pagar_pedido' mesa.pedido_set.last.id %}"
+              >
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success mr-2">
+                  Cobrar y liberar
+                </button>
+              </form>
+
+              <!-- Botón para editar el pedido -->
+              <a
+                href="{% url 'editar_pedido' pk=mesa.pedido_set.last.id %}"
+                class="btn btn-warning"
+              >
+                Editar Pedido
+              </a>
+            </div>
             {% elif mesa.estado == 'reservada' %}
-                <a href="{% url 'editar_pedido' mesa.pedido_set.last.id %}" class="btn btn-light">Ver Pedido</a>
+            <a
+              href="{% url 'editar_pedido' mesa.pedido_set.last.id %}"
+              class="btn btn-light"
+              >Ver Pedido</a
+            >
+
             {% else %}
-                <a href="{% url 'crear_pedido' %}" class="btn btn-primary">Crear Pedido</a>
+            <!-- Formulario para crear pedido directamente desde la mesa -->
+            <form action="{% url 'crear_pedido' %}" method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="mesa_id" value="{{ mesa.id }}" />
+              <div class="mb-3">
+                <input
+                  type="text"
+                  name="nombre"
+                  class="form-control"
+                  placeholder="Nombre del Cliente"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Crear Pedido
+              </button>
+            </form>
             {% endif %}
+          </div>
         </div>
-    </div>
-{% endfor %}
-
-        </div>
+        {% endfor %}
+      </div>
     </div>
 
-    <!-- Incluye Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+  </body>
 </html>

@@ -1,0 +1,68 @@
+{% extends 'Parrilla/base_generic.html' %} {% block content %}
+<div class="container p-5">
+  <h2 class="text-center mb-4 mt-5">Pedidos - Administrador</h2>
+
+  <!-- Formulario para seleccionar la fecha -->
+  <form method="GET" class="mb-4">
+    <label for="fecha">Seleccionar Fecha</label>
+    <input
+      type="date"
+      id="fecha"
+      name="fecha"
+      value="{{ fecha }}"
+      class="form-control"
+    />
+    <button type="submit" class="btn btn-primary mt-2">
+      Filtrar por Fecha
+    </button>
+  </form>
+
+  <h3 class="mt-5">Pedidos del {{ fecha|date:"d/m/Y" }}</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID Pedido</th>
+        <th>Nombre Cliente</th>
+        <th>Fecha</th>
+        <th>Total</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in page_obj %}
+      <tr>
+        <td>{{ pedido.id }}</td>
+        <td>{{ pedido.nombre }}</td>
+        <td>{{ pedido.fecha }}</td>
+        <td>${{ pedido.total}}</td>
+        <td>{{ pedido.get_estado_display }}</td>
+        <!-- Esto es si tienes un estado con choices -->
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center">No hay pedidos para esta fecha.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Paginación -->
+  <div class="pagination">
+    <!-- Mostrar el número de la página actual y el total de páginas -->
+    <p>Mostrando página {{ page_obj.number }} -</p>
+
+    <!-- Botones de paginación -->
+    <div class="pagination-links">
+      {% if page_obj.has_previous %}
+      <a href="?page=1">&laquo; Primera</a>
+      <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+      {% endif %} {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <h4>Total Facturación: ${{ total_facturacion }}</h4>
+</div>
+{% endblock %}
