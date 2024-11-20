@@ -40,7 +40,7 @@
     </tbody>
   </table>
 
-  <h4>Total: ${{ pedido.total }}</h4>
+  <h4 class="money-format">Total: ${{ pedido.total }}</h4>
 
   <div class="text-end">
     <a href="{% url 'vista_mesas' %}" class="btn btn-primary">mesas</a>
@@ -51,5 +51,6 @@
       Imprimir Detalle del Pedido
     </button>
   </div>
+
   {% endblock %}
 </div>

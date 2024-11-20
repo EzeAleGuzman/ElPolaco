@@ -34,7 +34,7 @@
         <td>{{ pedido.id }}</td>
         <td>{{ pedido.nombre }}</td>
         <td>{{ pedido.fecha }}</td>
-        <td>${{ pedido.total}}</td>
+        <td class="money-format">{{ pedido.total}}</td>
         <td>{{ pedido.get_estado_display }}</td>
         <!-- Esto es si tienes un estado con choices -->
       </tr>
@@ -63,6 +63,30 @@
     </div>
   </div>
 
-  <h4>Total Facturación: ${{ total_facturacion }}</h4>
+  <h4>
+    Total Facturación:
+    <span class="money-format">{{ total_facturacion }}</span>
+  </h4>
 </div>
+<script>
+  // Función para formatear valores como moneda
+  function formatMoney(value) {
+    return value.toLocaleString("es-AR", {
+      style: "currency",
+      currency: "ARS",
+    });
+  }
+
+  // Selecciona todos los elementos con la clase 'money-format'
+  var moneyElements = document.querySelectorAll(".money-format");
+
+  // Itera sobre cada elemento y lo formatea
+  moneyElements.forEach(function (element) {
+    var value = parseFloat(element.innerText); // Obtiene el valor numérico
+    if (!isNaN(value)) {
+      // Verifica que sea un número válido
+      element.innerText = formatMoney(value); // Formatea y reemplaza el valor
+    }
+  });
+</script>
 {% endblock %}
