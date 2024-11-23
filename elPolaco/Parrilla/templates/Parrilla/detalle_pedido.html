@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pedido {{ pedido.numero }}</title>
+    {% load bootstrap5 %} {% load static %}
     <style>
       /* Estilos para ocultar todo excepto la comanda durante la impresión */
       @media print {
@@ -24,6 +25,8 @@
     </style>
   </head>
   <body>
+    {% include 'Parrilla/layauts/nav.html' %}
+
     <h1>Pedido de {{ pedido.nombre }}</h1>
     <p>Fecha: {{ pedido.fecha }}</p>
     <p class="money-format">Total: ${{ pedido.total }}</p>

@@ -1,5 +1,5 @@
 {% extends 'Parrilla/base_generic.html' %} {% block content %}
-<div class="container p-5">
+<div class="container p-3">
   <h2 class="text-center mb-4 mt-5">Pedidos Para Llevar</h2>
 
   <!-- Formulario para agregar un nuevo pedido para llevar -->
@@ -20,13 +20,11 @@
     </button>
   </form>
 
-  <h3 class="mt-5">Pedidos Actuales Para Llevar</h3>
+  <h3 class="mt-4">Pedidos Actuales Para Llevar</h3>
   <table class="table">
     <thead>
       <tr>
-        <th>ID Pedido</th>
-        <th>Nombre Cliente</th>
-        <th>Fecha</th>
+        <th>N° Pedido</th>
         <th>Total</th>
         <th>Acciones</th>
       </tr>
@@ -34,20 +32,18 @@
     <tbody>
       {% for pedido in pedidos_para_llevar %}
       <tr>
-        <td>{{ pedido.id }}</td>
-        <td>{{ pedido.nombre }}</td>
-        <td>{{ pedido.fecha }}</td>
-        <td>${{ pedido.total }}</td>
-        <td>
+        <td>{{ pedido.numero }}</td>
+        <td class="money-format">${{ pedido.total }}</td>
+        <td class="d-flex flex-wrap justify-content-center">
           <a
             href="{% url 'editar_pedido' pk=pedido.id %}"
-            class="btn btn-warning"
+            class="btn btn-primary m-1"
           >
-            Editar Pedido
+            Editar
           </a>
           <a
             href="{% url 'cobrar_pedido' pk=pedido.id %}"
-            class="btn btn-info"
+            class="btn btn-success m-1"
             onclick="return confirm('¿Seguro que deseas cobrar este pedido?');"
           >
             Cobrar
@@ -58,4 +54,25 @@
     </tbody>
   </table>
 </div>
+<script>
+  // Función para formatear los valores como moneda
+  function formatMoney(value) {
+    return value.toLocaleString("es-AR", {
+      style: "currency",
+      currency: "ARS",
+    });
+  }
+
+  // Selecciona todos los elementos con la clase 'money-format'
+  var moneyElements = document.querySelectorAll(".money-format");
+
+  // Itera sobre cada elemento y lo formatea
+  moneyElements.forEach(function (element) {
+    // Obtén el texto, elimina el símbolo $ para convertirlo a número
+    var value = parseFloat(element.innerText.replace("$", ""));
+    if (!isNaN(value)) {
+      element.innerText = formatMoney(value); // Formatea y reemplaza el valor
+    }
+  });
+</script>
 {% endblock %}
