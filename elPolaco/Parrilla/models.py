@@ -1,5 +1,7 @@
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
+from django.db.models import Max
 
 
 class Producto(models.Model):
@@ -23,34 +25,37 @@ class Producto(models.Model):
 
 
 class Pedido(models.Model):
+    numero = models.IntegerField(unique=False)
     mesa = models.ForeignKey("Mesa", on_delete=models.CASCADE, blank=True, null=True)
     nombre = models.CharField(max_length=100, blank=True, null=True)
     fecha = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     pagado = models.BooleanField(default=False)
     para_llevar = models.BooleanField(default=False)
-
-    def calcular_total(self):
-        total = sum(detalle.subtotal for detalle in self.detallepedido_set.all())
-        self.total = total
-        self.save()
+    nota = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Obtener la fecha actual
+        hoy = timezone.now().date()
 
-        if self.mesa:
-            if not self.pagado and self.mesa.estado != "ocupada":
-                self.mesa.estado = "ocupada"
-                self.mesa.save()
+        # Si el pedido es nuevo (aún no tiene un ID), establecer el número
+        if not self.pk:
+            # Obtener el número más alto del día actual
+            ultimo_pedido_del_dia = Pedido.objects.filter(fecha__date=hoy).aggregate(
+                Max("numero")
+            )
 
-            elif self.pagado and self.mesa.estado != "libre":
-                self.mesa.estado = "libre"
-                self.mesa.save()
+            # Si hay un pedido anterior hoy, incrementar el número. Si no, empezar en 1.
+            if ultimo_pedido_del_dia["numero__max"]:
+                self.numero = ultimo_pedido_del_dia["numero__max"] + 1
+            else:
+                self.numero = 1
 
         super().save(*args, **kwargs)
 
     def __str__(self):
         fecha_formateada = self.fecha.strftime("%d/%m/%Y %H:%M")
-        return f'Pedido {self.id} - Mesa {self.mesa.numero if self.mesa else "Sin mesa"} - {fecha_formateada} - {self.nombre} - {self.total}'
+        return f'Pedido {self.numero} - Mesa {self.mesa.numero if self.mesa else "Sin mesa"} - {fecha_formateada} - {self.nombre} - {self.total} - {self.nota or "Sin nota"}'
 
     def get_absolute_url(self):
         return reverse("detalle_pedido", kwargs={"pedido_id": self.pk})

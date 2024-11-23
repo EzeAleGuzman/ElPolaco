@@ -1,18 +1,20 @@
 # forms.py
 from django import forms
-from .models import Pedido, DetallePedido, Producto, Mesa
+from .models import Pedido, DetallePedido, Producto
 
 
 class PedidoForm(forms.ModelForm):
     class Meta:
         model = Pedido
-        fields = ["mesa", "nombre", "total", "pagado", "para_llevar"]
+        fields = ["numero", "mesa", "nombre", "total", "pagado", "para_llevar", "nota"]
         widgets = {
+            "numero": forms.NumberInput(attrs={"class": "form-control"}),
             "mesa": forms.Select(attrs={"class": "form-control"}),
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
             "total": forms.NumberInput(attrs={"class": "form-control"}),
             "pagado": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "para_llevar": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "nota": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -46,3 +48,12 @@ class DetallePedidoForm(forms.ModelForm):
     cantidad = forms.IntegerField(
         min_value=1, widget=forms.NumberInput(attrs={"class": "form-control"})
     )
+
+
+class PedidoNotaForm(forms.ModelForm):
+    class Meta:
+        model = Pedido
+        fields = ["nota"]
+        widgets = {
+            "nota": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+        }

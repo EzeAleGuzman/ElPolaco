@@ -1,14 +1,21 @@
-{% extends 'Parrilla/base_generic.html' %} {% block content %}
+{% extends 'Parrilla/base_generic.html' %}
+{% block content %}
+{% load static %}
 <div class="container p-3">
   <h2 class="text-center mb-2 mt-5">
-    Pedido De {{ pedido.nombre }} N°{{ pedido.id }}
+    Pedido De {{ pedido.nombre }} N°{{ pedido.numero }}
   </h2>
 
-  <form method="post">
-    {% csrf_token %} {{ detalle_form.as_p }}
-    <button type="submit" name="agregar_detalle" class="btn btn-success">
-      Agregar Producto
-    </button>
+  <form method="POST" action="{% url 'editar_pedido' pk=pedido.pk %}">
+    {% csrf_token %}
+    {{ detalle_form.as_p }}
+    <button class="btn btn-primary" type="submit" name="detalle_form_submit">Agregar Detalle</button>
+  </form>
+
+  <form method="POST" action="{% url 'editar_pedido' pk=pedido.pk %}">
+    {% csrf_token %}
+    {{ nota_form.as_p }}
+    <button class="btn btn-primary" type="submit" name="nota_form_submit">Agregar Nota</button>
   </form>
 
   <h3>Detalles Agregados</h3>
@@ -16,41 +23,259 @@
     <thead>
       <tr>
         <th class="text-2">Producto</th>
-        <th>Cantidad</th>
+        <th>Cant</th>
         <th>Subtotal</th>
         <th>Acciones</th>
-        <!-- Nueva columna para las acciones -->
       </tr>
     </thead>
     <tbody>
       {% for detalle in detalles_pedido %}
-      <tr>
+      <tr id="fila-{{ detalle.id }}">
         <td>{{ detalle.producto.nombre }}</td>
         <td>{{ detalle.cantidad }}</td>
-        <td>${{ detalle.subtotal }}</td>
-        <td>
-          <a
-            href="{% url 'eliminar_detalle' detalle.id pedido.id %}"
-            class="btn btn-danger"
-            >Eliminar</a
-          >
+        <td class="money-format">${{ detalle.subtotal }}</td>
+        <td><a href="{% url 'eliminar_detalle' detalle.id pedido.id %}" class="btn btn-danger">Eliminar</a></td>
+      </tr>
+
+      <!-- Comanda con detalle debajo de cada producto -->
+      <tr id="comanda-detalle-{{ detalle.id }}" style="display: none;">
+        <td colspan="5">
+          <p><strong>Detalles sobre el producto:</strong></p>
+          <p id="comentario-{{ detalle.id }}"></p> <!-- Aquí se mostrará el comentario -->
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
-  <h4 class="money-format">Total: ${{ pedido.total }}</h4>
+  <p style="font-size: 25px; text-align: center; margin-top: 20px;">
+    Total:
+    <strong class="money-format h4">{{ pedido.total }}</strong>
+  </p>
+
 
   <div class="text-end">
-    <a href="{% url 'vista_mesas' %}" class="btn btn-primary">mesas</a>
-    <a href="{% url 'pedidos_para_llevar' %}" class="btn btn-secondary"
-      >mesas</a
-    >
-    <button onclick="window.print()" class="btn btn-secondary mt-2">
-      Imprimir Detalle del Pedido
+    <a href="{% url 'vista_mesas' %}" class="btn btn-primary">Mesas</a>
+    <a href="{% url 'pedidos_para_llevar' %}" class="btn btn-warning">Pedidos para Llevar</a>
+    <button onclick="imprimirComanda()" class="btn btn-success border-subtle mt-2">
+      Imprimir Comanda
+    </button>
+    <button onclick="imprimirTicket()" class="btn btn-primary mt-2">
+      Imprimir Ticket
     </button>
   </div>
 
-  {% endblock %}
+  <!-- Sección oculta para la comanda -->
+  <div id="comanda" style="display: none">
+    <div style="display: flex; justify-content: center; align-items: center;">
+      <img src="{% static 'productos/logo1.png' %}" alt="Imagen"
+        style="max-width: 40%; height: auto; margin-bottom: 20px;">
+    </div>
+    <h1 class="text-center">Comanda</h1>
+    <hr>
+    <hr>
+    <div class="container d-flex ">
+
+      <p class="d-flex justify-content-center align-items-center">
+        <span style="font-size: 30px; margin-right: 10px;">N° Pedido: </span>
+      <div class="border border-primary d-flex align-items-center justify-content-center"
+        style="width: 100px; height: 100px;">
+        <strong style="font-size: 40px;">{{ pedido.numero }}</strong>
+      </div>
+      </p>
+    </div>
+
+
+
+    <p><strong style="font-size: 22px">Hora:</strong> {{ pedido.fecha }}</p>
+
+    <table class="table" style="font-size: 22px; width: 100%; margin-top: 20px">
+      <thead>
+        <tr>
+          <th class="text-center h3">Producto</th>
+          <th>Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for detalle in detalles_pedido %}
+        <tr>
+          <td class="text-center h3">{{ detalle.producto.nombre }}</td>
+          <td class="text-center h3">{{ detalle.cantidad }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if pedido.nota %}
+    <h4><strong>Nota:</strong></h4>
+    <p class="text-center h3">{{ pedido.nota }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Sección oculta para el ticket -->
+  <div id="ticket" style="display: none;">
+    <div style="display: flex; justify-content: center; align-items: center;">
+      <img src="{% static 'productos/logo1.png' %}" alt="Imagen"
+        style="max-width: 40%; height: auto; margin-bottom: 20px;">
+    </div>
+
+    <p style="font-size: 24px; text-align: center;">Ticket</p>
+    <p style="font-size: 22px; text-align: center;">
+      <strong>Pedido N°{{ pedido.numero }}</strong>
+    </p>
+    <p style="font-size: 18px; text-align: center;">
+      <strong>Hora:</strong> {{ pedido.fecha }}
+    </p>
+
+    <table style="width: 100%; font-size: 18px; margin-top: 20px; text-align: left;">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Precio</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for detalle in detalles_pedido %}
+        <tr>
+          <td>{{ detalle.producto.nombre }}</td>
+          <td>{{ detalle.cantidad }}</td>
+          <td class="money-format">${{ detalle.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p style="font-size: 20px; text-align: center; margin-top: 20px;">
+      Total:
+      <strong class="money-format">{{ pedido.total }}</strong>
+    </p>
+
+
+  </div>
+
+  <style>
+    /* Estilos para la impresión */
+    @media print {
+      @page {
+        size: 80mm 200mm;
+        margin: 10mm;
+      }
+
+      body * {
+        visibility: hidden;
+      }
+
+      #comanda,
+      #comanda * {
+        visibility: visible;
+      }
+
+      #comanda {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        font-size: 18px;
+      }
+
+      #ticket,
+      #ticket * {
+        visibility: visible;
+      }
+
+      #ticket {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        font-size: 18px;
+        margin: 20px;
+      }
+
+      #comanda table,
+      #ticket table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      #comanda th,
+      #comanda td,
+      #ticket th,
+      #ticket td {
+        padding: 10px;
+        text-align: left;
+      }
+    }
+  </style>
+
+  <script>
+    // Función para imprimir la comanda
+    function imprimirComanda() {
+      document.getElementById("comanda").style.display = "block";
+      window.print();
+      document.getElementById("comanda").style.display = "none";
+    }
+
+    // Función para imprimir el ticket
+    function imprimirTicket() {
+      document.getElementById("ticket").style.display = "block";
+      window.print();
+      document.getElementById("ticket").style.display = "none";
+    }
+
+    // Función para mostrar u ocultar el textarea al hacer clic en el botón
+    function toggleDetalle(detalleId) {
+      var detalleDiv = document.getElementById('detalle-' + detalleId);
+      var comandaDetalle = document.getElementById('comanda-detalle-' + detalleId);
+
+      if (detalleDiv.style.display === 'none' || detalleDiv.style.display === '') {
+        detalleDiv.style.display = 'block'; // Mostrar el textarea
+      } else {
+        detalleDiv.style.display = 'none'; // Ocultar el textarea
+      }
+
+      // Alternar la visibilidad del comentario debajo de la comanda
+      if (comandaDetalle.style.display === 'none' || comandaDetalle.style.display === '') {
+        comandaDetalle.style.display = 'table-row'; // Mostrar el detalle
+      } else {
+        comandaDetalle.style.display = 'none'; // Ocultar el detalle
+      }
+    }
+
+    // Función para guardar el detalle ingresado en el textarea
+    function guardarDetalle(detalleId) {
+      var textarea = document.querySelector('#detalle-' + detalleId + ' textarea');
+      var comentario = document.getElementById('comentario-' + detalleId);
+
+      // Guardar el texto ingresado en el campo debajo de la tabla
+      if (textarea.value) {
+        comentario.textContent = textarea.value; // Mostrar el comentario debajo
+      }
+    };
+
+    // Función para formatear los valores como moneda
+    function formatMoney(value) {
+      return value.toLocaleString("es-AR", {
+        style: "currency",
+        currency: "ARS",
+      });
+    }
+
+  // Selecciona todos los elementos con la clase 'money-format'
+  var moneyElements = document.querySelectorAll(".money-format");
+
+  // Itera sobre cada elemento y lo formatea
+  moneyElements.forEach(function (element) {
+    // Obtén el texto, elimina el símbolo $ para convertirlo a número
+    var value = parseFloat(element.innerText.replace("$", ""));
+    if (!isNaN(value)) {
+      element.innerText = formatMoney(value); // Formatea y reemplaza el valor
+    }
+  });
+
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </div>
+{% endblock %}

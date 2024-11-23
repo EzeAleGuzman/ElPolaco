@@ -1,11 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedido {{ pedido.id }}</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pedido {{ pedido.numero }}</title>
+    <style>
+      /* Estilos para ocultar todo excepto la comanda durante la impresión */
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #comanda,
+        #comanda * {
+          visibility: visible;
+        }
+        #comanda {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
     <h1>Pedido de {{ pedido.nombre }}</h1>
     <p>Fecha: {{ pedido.fecha }}</p>
     <p class="money-format">Total: ${{ pedido.total }}</p>
@@ -13,31 +31,73 @@
 
     <h3>Detalles del Pedido:</h3>
     <ul>
-        {% for detalle in pedido.detallepedido_set.all %}
-            <li>{{ detalle.producto.nombre }} x {{ detalle.cantidad }} - ${{ detalle.subtotal }}</li>
-        {% endfor %}
+      {% for detalle in pedido.detallepedido_set.all %}
+      <li>
+        {{ detalle.producto.nombre }} x {{ detalle.cantidad }} - ${{
+        detalle.subtotal }}
+      </li>
+      {% endfor %}
     </ul>
 
     <a href="{% url 'vista_mesas' %}">Volver a Mesas</a>
+
+    <!-- Botón para imprimir la comanda -->
+    <button onclick="imprimirComanda()">Imprimir Comanda</button>
+
+    <div id="comanda" style="display: none">
+      <h2>Comanda</h2>
+      <p><strong>Nombre:</strong> {{ pedido.nombre }}</p>
+      <p><strong>Número de pedido:</strong> {{ pedido.numero }}</p>
+      <p><strong>Hora:</strong> {{ pedido.fecha }}</p>
+
+      <table id="comanda-productos">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for detalle in pedido.detallepedido_set.all %}
+          <tr>
+            <td>{{ detalle.producto.nombre }}</td>
+            <td>{{ detalle.cantidad }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
     <script>
-        // Función para formatear valores como moneda
-        function formatMoney(value) {
-          return value.toLocaleString("es-AR", {
-            style: "currency",
-            currency: "ARS",
-          });
-        }
-      
-        // Selecciona todos los elementos con la clase 'money-format'
-        var moneyElements = document.querySelectorAll(".money-format");
-      
-        // Itera sobre cada elemento y lo formatea
-        moneyElements.forEach(function (element) {
-          var value = parseFloat(element.innerText); // Obtiene el valor numérico
-          if (!isNaN(value)) {
-            // Verifica que sea un número válido
-            element.innerText = formatMoney(value); // Formatea y reemplaza el valor
-          }
+      // Función para formatear valores como moneda
+      function formatMoney(value) {
+        return value.toLocaleString("es-AR", {
+          style: "currency",
+          currency: "ARS",
         });
-</body>
+      }
+
+      // Función para imprimir la comanda
+      function imprimirComanda() {
+        // Hacer visible la comanda
+        document.getElementById("comanda").style.display = "block";
+        // Ejecutar el comando de impresión
+        window.print();
+        // Ocultar la comanda nuevamente después de la impresión
+        document.getElementById("comanda").style.display = "none";
+      }
+
+      // Selecciona todos los elementos con la clase 'money-format'
+      var moneyElements = document.querySelectorAll(".money-format");
+
+      // Itera sobre cada elemento y lo formatea
+      moneyElements.forEach(function (element) {
+        // Obtén el texto, elimina el símbolo $ para convertirlo a número
+        var value = parseFloat(element.innerText.replace("$", ""));
+        if (!isNaN(value)) {
+          element.innerText = formatMoney(value); // Formatea y reemplaza el valor
+        }
+      });
+    </script>
+  </body>
 </html>

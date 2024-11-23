@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.core.paginator import Paginator
 from .models import Producto, Pedido, Mesa, DetallePedido
-from .forms import DetallePedidoForm
+from .forms import DetallePedidoForm, PedidoNotaForm
 from django.db.models import Sum
 
 
@@ -31,6 +31,7 @@ def crear_pedido(request):
         nombre = request.POST.get("nombre")
         mesa = get_object_or_404(Mesa, id=mesa_id)
 
+        # Crear el nuevo pedido
         pedido = Pedido.objects.create(
             mesa=mesa,
             nombre=nombre,
@@ -38,12 +39,24 @@ def crear_pedido(request):
             pagado=False,
             para_llevar=False,
         )
+
+        # Actualizar el estado de la mesa
         mesa.estado = "ocupada"
         mesa.save()
 
+        # Redirigir a la vista de mesas
         return redirect("vista_mesas")
 
     return render(request, "error.html")
+
+
+def crear_detalle(request, pedido_id, detalle):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    if request.method == "POST":
+        pedido.detalle = request.POST.get(detalle)
+        pedido.save()
+        return redirect("editar_pedido", pedido_id=pedido_id)
+    return render(request, "Parrilla/editar_pedido.html", {"pedido": pedido})
 
 
 def pagar_pedido(request, pedido_id):
@@ -93,47 +106,56 @@ def pedidos_para_llevar(request):
 
 def editar_pedido(request, pk):
     pedido = get_object_or_404(Pedido, pk=pk)  # Usar pk directamente
-    detalles_pedido = (
-        pedido.detallepedido_set.all()
-    )  # Obtener todos los detalles del pedido
-    detalle_form = DetallePedidoForm()
+    detalles_pedido = pedido.detallepedido_set.all()
+    nota_form = PedidoNotaForm(instance=pedido)  # Formulario para la nota del pedido
+    detalle_form = DetallePedidoForm()  # Formulario para los detalles del pedido
 
     if request.method == "POST":
-        detalle_form = DetallePedidoForm(request.POST)
-        if detalle_form.is_valid():
-            # Obtener el producto y la cantidad del formulario
-            producto = detalle_form.cleaned_data["producto"]
-            cantidad = detalle_form.cleaned_data["cantidad"]
+        # Procesar el formulario de detalles del pedido
+        if "detalle_form_submit" in request.POST:
+            detalle_form = DetallePedidoForm(request.POST)
+            if detalle_form.is_valid():
+                producto = detalle_form.cleaned_data["producto"]
+                cantidad = detalle_form.cleaned_data["cantidad"]
 
-            # Verificar si ya existe un detalle con el mismo producto en el pedido
-            detalle_existente = pedido.detallepedido_set.filter(
-                producto=producto
-            ).first()
+                # Verificar si ya existe un detalle con el mismo producto en el pedido
+                detalle_existente = pedido.detallepedido_set.filter(
+                    producto=producto
+                ).first()
 
-            if detalle_existente:
-                # Si existe, actualiza la cantidad y el subtotal
-                detalle_existente.cantidad += cantidad
-                detalle_existente.subtotal = (
-                    detalle_existente.producto.precio * detalle_existente.cantidad
-                )
-                detalle_existente.save()
+                if detalle_existente:
+                    # Si existe, actualiza la cantidad y el subtotal
+                    detalle_existente.cantidad += cantidad
+                    detalle_existente.subtotal = (
+                        detalle_existente.producto.precio * detalle_existente.cantidad
+                    )
+                    detalle_existente.save()
 
-                # Actualiza el total del pedido
-                pedido.total += producto.precio * cantidad
-                pedido.save()
+                    # Actualiza el total del pedido
+                    pedido.total += producto.precio * cantidad
+                    pedido.save()
 
-            else:
-                # Si no existe, crear un nuevo detalle
-                detalle_pedido = detalle_form.save(commit=False)
-                detalle_pedido.pedido = pedido
-                detalle_pedido.save()
+                else:
+                    # Si no existe, crear un nuevo detalle
+                    detalle_pedido = detalle_form.save(commit=False)
+                    detalle_pedido.pedido = pedido
+                    detalle_pedido.save()
 
-                # Actualiza el total del pedido
-                pedido.total += detalle_pedido.producto.precio * detalle_pedido.cantidad
-                pedido.save()
+                    # Actualiza el total del pedido
+                    pedido.total += (
+                        detalle_pedido.producto.precio * detalle_pedido.cantidad
+                    )
+                    pedido.save()
 
             # Redirigir a la misma vista con el pedido actualizado
             return redirect("editar_pedido", pk=pedido.pk)
+
+        # Procesar el formulario de la nota del pedido
+        elif "nota_form_submit" in request.POST:
+            nota_form = PedidoNotaForm(request.POST, instance=pedido)
+            if nota_form.is_valid():
+                nota_form.save()  # Guardar la nueva nota
+                return redirect("editar_pedido", pk=pedido.pk)
 
     return render(
         request,
@@ -142,6 +164,7 @@ def editar_pedido(request, pk):
             "pedido": pedido,
             "detalles_pedido": detalles_pedido,
             "detalle_form": detalle_form,
+            "nota_form": nota_form,
         },
     )
 
